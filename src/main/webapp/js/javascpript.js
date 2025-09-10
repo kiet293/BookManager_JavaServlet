@@ -8,7 +8,7 @@ const formTitle = document.getElementById('form-title');
 const submitBtn = document.getElementById('submit-btn');
 const cancelBtn = document.getElementById('cancel-btn');
 const bookIdInput = document.getElementById('book-id');
-const formActionInput = document.getElementById('form-action');
+
 const titleInput = document.getElementById('title');
 const authorInput = document.getElementById('author');
 const deleteModal = document.getElementById('delete-modal');
@@ -86,43 +86,16 @@ function handleFormSubmit(e) {
 }
 
 function editBook(id, title, author) {
-    // Set edit mode
     isEditMode = true;
     currentBookId = id;
 
-    // Update form
-    bookIdInput.value = id;
-    formActionInput.value = 'PUT';
+    bookIdInput.value = id;   // hidden input để Servlet nhận biết update
     titleInput.value = title;
     authorInput.value = author;
 
-    // Update UI
     formTitle.innerHTML = '<i class="fas fa-edit"></i> Chỉnh Sửa Sách';
     submitBtn.innerHTML = '<i class="fas fa-save"></i> Cập Nhật Sách';
-    submitBtn.className = 'btn-submit btn-update';
     cancelBtn.style.display = 'block';
-
-    // Update form action for edit
-    bookForm.action = bookForm.action.replace('/books', `/books/${id}`);
-
-    // Scroll to form and focus
-    document.querySelector('.form-container').scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-    });
-    titleInput.focus();
-
-    // Add visual feedback
-    const bookItem = document.querySelector(`[data-book-id="${id}"]`);
-    if (bookItem) {
-        bookItem.style.background = 'linear-gradient(145deg, #fef5e7, #fed7aa)';
-        bookItem.style.borderLeftColor = '#f59e0b';
-
-        setTimeout(() => {
-            bookItem.style.background = '';
-            bookItem.style.borderLeftColor = '';
-        }, 3000);
-    }
 }
 
 function resetForm() {
@@ -133,7 +106,6 @@ function resetForm() {
     // Clear form
     bookForm.reset();
     bookIdInput.value = '';
-    formActionInput.value = '';
 
     // Reset UI
     formTitle.innerHTML = '<i class="fas fa-plus-circle"></i> Thêm Sách Mới';
@@ -141,9 +113,6 @@ function resetForm() {
     submitBtn.className = 'btn-submit';
     submitBtn.disabled = false;
     cancelBtn.style.display = 'none';
-
-    // Reset form action
-    bookForm.action = bookForm.action.replace(/\/books\/\d+/, '/books');
 
     // Remove loading state if present
     submitBtn.classList.remove('loading');
@@ -178,17 +147,24 @@ function confirmDelete() {
     confirmButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xóa...';
     confirmButton.disabled = true;
 
-    // Create and submit delete form
+    // Tạo form GET với action=delete&id=...
     const deleteForm = document.createElement('form');
-    deleteForm.method = 'POST';
-    deleteForm.action = `${getContextPath()}/books/${currentBookId}`;
+    deleteForm.method = 'GET';
+    deleteForm.action = `${getContextPath()}/books`;
 
-    const methodInput = document.createElement('input');
-    methodInput.type = 'hidden';
-    methodInput.name = '_method';
-    methodInput.value = 'DELETE';
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'delete';
 
-    deleteForm.appendChild(methodInput);
+    const idInput = document.createElement('input');
+    idInput.type = 'hidden';
+    idInput.name = 'id';
+    idInput.value = currentBookId;
+
+    deleteForm.appendChild(actionInput);
+    deleteForm.appendChild(idInput);
+
     document.body.appendChild(deleteForm);
     deleteForm.submit();
 }

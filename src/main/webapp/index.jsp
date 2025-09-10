@@ -1,4 +1,5 @@
 <%@ taglib uri="jakarta.tags.core" prefix="c" %>
+<%@ taglib uri="jakarta.tags.functions" prefix="fn" %>
 <%@ page contentType="text/html" pageEncoding="UTF-8" %>
 <!DOCTYPE html>
 <html lang="vi">
@@ -46,7 +47,9 @@
 
             <div class="stats">
                 <div class="stat-item">
-                    <span class="stat-number">${books.size()}</span>
+                    <span class="stat-number">
+    <c:out value="${books != null ? books.size() : 0}" />
+</span>
                     <span class="stat-label">Tổng sách</span>
                 </div>
             </div>
@@ -93,10 +96,10 @@
                                     </div>
                                 </div>
                                 <div class="book-actions">
-                                    <button class="btn-action btn-edit" onclick="editBook(${b.id}, '${b.title}', '${b.author}')">
+                                    <button class="btn-action btn-edit" onclick="editBook(${b.id}, '${fn:escapeXml(b.title)}', '${fn:escapeXml(b.author)}')">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn-action btn-delete" onclick="deleteBook(${b.id}, '${b.title}')">
+                                    <button class="btn-action btn-delete" onclick="deleteBook(${b.id}, '${fn:escapeXml(b.title)}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -113,7 +116,6 @@
 
             <form method="post" action="${pageContext.request.contextPath}/books" id="book-form">
                 <input type="hidden" id="book-id" name="id" value="">
-                <input type="hidden" id="form-action" name="_method" value="">
 
                 <div class="form-group">
                     <label for="title">

@@ -11,21 +11,16 @@ public class BookDAO {
 
     public List<Book> findAll() {
         List<Book> books = new ArrayList<>();
-        String sql = "SELECT * FROM books";
-
-        try(Connection con = DBConnectSQL.getConnection();
-            Statement stm = con.createStatement();
-            ResultSet result = stm.executeQuery(sql)) {
-            while (result.next()) {
-                books.add(new Book(
-                        result.getInt("id"),
-                        result.getString("title"),
-                        result.getString("author")
-                ));
+        String sql = "SELECT id, title, author FROM books";
+        try (Connection con = DBConnectSQL.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                books.add(new Book(rs.getInt("id"), rs.getString("title"), rs.getString("author")));
             }
-        } catch(SQLException e) {
-                e.printStackTrace();
-            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error executing query: " + sql, e);
+        }
             return books;
 
     }
@@ -53,25 +48,44 @@ public class BookDAO {
         }
     }
 
-    public Book findBook(String title, String author) {
-        String sql = "SELECT * FROM books WHERE tilte = ?, author = ?";
+    public Book findById(int id) {
+        String sql = "SELECT id, title, author FROM books WHERE id = ?";
         try (Connection con = DBConnectSQL.getConnection();
-             PreparedStatement pstm = con.prepareStatement(sql)) {
-            pstm.setString(1, title);
-            pstm.setString(2, author);
-            try (ResultSet result = pstm.executeQuery()) {
-                if (result.next()) {
-                    return new Book(
-                            result.getInt("id"),
-                            result.getString("title"),
-                            result.getString("author")
-                    );
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Book(rs.getInt("id"), rs.getString("title"), rs.getString("author"));
                 }
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Error executing query: " + sql, e);
         }
         return null;
+    }
+
+
+    public List<Book> search(String keyword) {
+        List<Book> list = new ArrayList<>();
+        String sql = "SELECT id, title, author FROM books " +
+                "WHERE title LIKE ? OR author LIKE ? ORDER BY id DESC";
+        try (Connection con = DBConnectSQL.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            String searchKeyword = "%" + keyword + "%";
+            ps.setString(1, searchKeyword);
+            ps.setString(2, searchKeyword);
+            try (ResultSet result = ps.executeQuery()) {
+                    while (result.next()) {
+                        int id = result.getInt("id");
+                        String title = result.getString("title");
+                        String author = result.getString("author");
+                        list.add(new Book(id, title, author));
+                    }
+             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     public void update(Book book) {
